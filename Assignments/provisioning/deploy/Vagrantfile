@@ -6,14 +6,7 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure("2") do |config|
-  # The most common configuration options are documented and commented below.
-  # For a complete reference, please see the online documentation at
-  # https://docs.vagrantup.com.
 
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://vagrantcloud.com/search.
-
- 
   servers=[
     {
       :hostname => "appserver",
@@ -30,32 +23,33 @@ Vagrant.configure("2") do |config|
     {
       :hostname => "web",
       :box => "bento/ubuntu-18.04",
-      :ssh_port => "2202",
+      :ssh_port => "8080",
       :forwarded_port_guest => "22"
-    }#,
-    #{
-    #  :hostname => "tst0",
-    #  :box => "bento/ubuntu-18.04",
-    #  :ssh_port => "2203",
-    #  :forwarded_port_guest => "22"
-    #},
-    #{
-    #  :hostname => "tst1",
-    #  :box => "bento/ubuntu-18.04",
-    #  :ssh_port => "2204",
-    #  :forwarded_port_guest => "22"
-    #},
-    #{
-    #  :hostname => "tst2",
-    #  :box => "bento/ubuntu-18.04",
-    #  :ssh_port => "2205",
-    #  :forwarded_port_guest => "22"
-    #}
+    },
+    
+    # Test-servers must be named with the chars "tst" following a number. E.g. "tst1" or "tst276"
+
+    {
+      :hostname => "tst0",
+      :box => "bento/ubuntu-18.04",
+      :ssh_port => "2203",
+      :forwarded_port_guest => "22"
+    },
+    {
+      :hostname => "tst1",
+      :box => "bento/ubuntu-18.04",
+      :ssh_port => "2204",
+      :forwarded_port_guest => "22"
+    },
+    {
+      :hostname => "tst2",
+      :box => "bento/ubuntu-18.04",
+      :ssh_port => "2205",
+      :forwarded_port_guest => "22"
+    }
   ]
 
-  #Fix mysql install on dbserver. Error-msg:
-  #==> dbserver: Error: 'sudo apt install mysql-server' returned 1 instead of one of [0]
-  #==> dbserver: Error: /Stage[main]/Mysql/Exec[mysql]/returns: change from 'notrun' to ['0'] failed: 'sudo apt install mysql-server' returned 1 instead of one of [0]
+  config.vm.synced_folder "etc/", "/vagrant"
 
   servers.each do |machine|
     config.vm.define machine[:hostname] do |node|
@@ -68,7 +62,8 @@ Vagrant.configure("2") do |config|
       node.vm.box = machine[:box]
       node.vm.hostname = machine[:hostname]
       node.vm.network :private_network, type: "dhcp" #ip: machine[:ip]
-      node.vm.network "forwarded_port", guest: machine[:forwarded_port_guest], host: machine[:ssh_port], id: "ssh"
+      node.vm.network "forwarded_port", guest: machine[:forwarded_port_guest], host: machine[:ssh_port], id: "ssh", auto_correct: true
+
       node.vm.provision "puppet" do |puppet|
         puppet.manifests_path = "../environments/test/manifests"
         puppet.manifest_file = "default.pp"
