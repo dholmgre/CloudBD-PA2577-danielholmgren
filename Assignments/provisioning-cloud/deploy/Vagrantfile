@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+
+  config.vm.define "appserver" do |app|
+    app.vm.hostname = "appserver"
+  end
+  config.vm.define "dbserver" do |db|
+    db.vm.hostname = "dbserver"
+  end
+
+  config.vm.provider :digital_ocean do |provider, override|
+    override.ssh.private_key_path = '~/.ssh/id_rsa'
+    override.vm.box = 'digital_ocean'
+    override.vm.box_url = "https://github.com/devopsgroup-io/vagrant-digitalocean/raw/master/box/digital_ocean.box"
+    override.nfs.functional = false
+    override.vm.allowed_synced_folder_types = :rsync
+    provider.token = ENV['DIGITALOCEAN-TOKEN']
+    provider.image = 'ubuntu-18-04-x64'
+    provider.region = 'nyc1'
+    provider.size = 's-1vcpu-1gb'
+    provider.backups_enabled = false
+    provider.private_networking = false
+    provider.ipv6 = false
+    provider.monitoring = false
+  end
+
+
+  config.vm.provider :virtualbox do |v, override|
+    override.vm.box = 'bento/ubuntu-18.04'
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+        wget https://apt.puppetlabs.com/puppet5-release-$(lsb_release -cs).deb
+        dpkg -i puppet5-release-$(lsb_release -cs).deb
+        apt-get -qq update
+        apt-get install -y puppet-agent
+      SHELL
+
+  config.vm.provision "puppet" do |puppet|
+    puppet.manifests_path = "../environments/test/manifests"
+    puppet.manifest_file = "default.pp"
+    puppet.environment_path = "../environments"
+    puppet.environment = "test"
+  end
+end
