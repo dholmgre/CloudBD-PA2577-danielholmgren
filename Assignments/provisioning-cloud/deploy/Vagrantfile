@@ -30,7 +30,6 @@ Vagrant.configure("2") do |config|
     provider.monitoring = false
   end
 
-
   config.vm.provider :virtualbox do |v, override|
     override.vm.box = 'bento/ubuntu-18.04'
   end
