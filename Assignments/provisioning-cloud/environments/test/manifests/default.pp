@@ -34,8 +34,10 @@ class nodejs{
 	}
 }
 
-
 class mysql{
+	if ($pw == undef ) { 
+		$pw = "Passw0rd!" 
+	}
 
 	exec {"mysql":
 		command => 'sudo apt-get install -y mysql-server',
@@ -44,7 +46,7 @@ class mysql{
 	}
 
 	exec {"mysql-set-pw":
-		command => 'echo mysql-server mysql-server/root_password password Passw0rd! | sudo debconf-set-selections',
+		command => 'echo mysql-server mysql-server/root_password password ${pw} | sudo debconf-set-selections',
 		provider => shell,
 		require => [
 			Exec["apt_get_update"],
